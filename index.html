@@ -102,12 +102,13 @@
       display: grid;
       grid-template-columns: 1fr 1fr 1fr 1fr auto;
       gap: 16px;
-      align-items: end;
+      align-items: flex-start;
     }
     .field {
       display: flex;
       flex-direction: column;
       gap: 6px;
+      margin-top: 0;
     }
     .field label {
       font-size: 0.72rem;
@@ -115,6 +116,7 @@
       letter-spacing: 0.12em;
       color: var(--text-muted);
       font-weight: 600;
+      height: 1.2em;
     }
     .field input {
       border: 1.5px solid var(--border);
@@ -126,6 +128,7 @@
       background: var(--surface2);
       transition: border-color 0.2s, box-shadow 0.2s;
       outline: none;
+      height: 38px;
     }
     .field input:focus {
       border-color: var(--accent);
@@ -148,6 +151,8 @@
       transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
       white-space: nowrap;
       box-shadow: 0 2px 8px rgba(192,57,43,0.18);
+      margin-top: 1.2em;
+      align-self: flex-start;
     }
     #btn-add:hover {
       background: var(--accent2);
@@ -156,7 +161,6 @@
     }
     #btn-add:active { transform: translateY(0); }
 
-    /* Error messages */
     .error-msg {
       font-size: 0.72rem;
       color: var(--accent);
@@ -255,16 +259,19 @@
     .cell-name { font-weight: 500; }
     .cell-category {
       font-size: 0.82rem;
+      vertical-align: middle;
     }
     .category-badge {
       display: inline-block;
       background: #f0ebe2;
       color: #7a6f60;
       border-radius: 20px;
-      padding: 3px 12px;
+      padding: 4px 12px;
       font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.05em;
+      vertical-align: middle;
+      line-height: 1.4;
     }
     .cell-price {
       font-weight: 600;
@@ -413,6 +420,8 @@
       const tbody = document.getElementById('product-tbody');
       const countEl = document.getElementById('product-count');
 
+      if (!tbody) return;
+      
       tbody.innerHTML = '';
       countEl.textContent = data.length + ' sản phẩm';
 
@@ -442,39 +451,25 @@
         .replace(/"/g, '&quot;');
     }
 
-    const xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        products = JSON.parse(xhr.responseText);
-        renderTable(products);
-      }
-    };
-    xhr.open('GET', 'products.json');
-    xhr.send();
+    function loadProducts() {
+      const xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              products = JSON.parse(xhr.responseText);
+              renderTable(products);
+            } catch (e) {
+              console.error('Error parsing JSON:', e);
+            }
+          }
+        }
+      };
+      xhr.open('GET', 'products.json', true);
+      xhr.send();
+    }
 
-    const thName = document.getElementById('th-name');
-    const sortIcon = document.getElementById('sort-icon');
-
-    thName.addEventListener('click', function () {
-      if (isSorted) {
-        sortAsc = !sortAsc;
-      } else {
-        sortAsc = true;
-        isSorted = true;
-      }
-
-      const sorted = [...products].sort((a, b) => {
-        return sortAsc
-          ? a.name.localeCompare(b.name, 'vi')
-          : b.name.localeCompare(a.name, 'vi');
-      });
-
-      thName.classList.add('active');
-      sortIcon.textContent = sortAsc ? '▲' : '▼';
-      renderTable(sorted);
-    });
-
-    document.getElementById('btn-add').addEventListener('click', function () {
+    function addProduct() {
       const nameInput     = document.getElementById('input-name');
       const categoryInput = document.getElementById('input-category');
       const priceInput    = document.getElementById('input-price');
@@ -514,8 +509,14 @@
       products.push(newProduct);
 
       isSorted = false;
-      thName.classList.remove('active');
-      sortIcon.textContent = '⇅';
+      const thName = document.getElementById('th-name');
+      if (thName) {
+        thName.classList.remove('active');
+      }
+      const sortIcon = document.getElementById('sort-icon');
+      if (sortIcon) {
+        sortIcon.textContent = '⇅';
+      }
 
       renderTable(products);
 
@@ -526,15 +527,49 @@
 
       showToast('Đã thêm "' + name + '" thành công!');
       nameInput.focus();
-    });
+    }
 
     let toastTimer;
     function showToast(msg) {
       const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+      if (toast) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+      }
+    }
+
+    loadProducts();
+
+    const thName = document.getElementById('th-name');
+    if (thName) {
+      thName.addEventListener('click', function () {
+        if (isSorted) {
+          sortAsc = !sortAsc;
+        } else {
+          sortAsc = true;
+          isSorted = true;
+        }
+
+        const sorted = [...products].sort((a, b) => {
+          return sortAsc
+            ? a.name.localeCompare(b.name, 'vi')
+            : b.name.localeCompare(a.name, 'vi');
+        });
+
+        thName.classList.add('active');
+        const sortIcon = document.getElementById('sort-icon');
+        if (sortIcon) {
+          sortIcon.textContent = sortAsc ? '▲' : '▼';
+        }
+        renderTable(sorted);
+      });
+    }
+
+    const btnAdd = document.getElementById('btn-add');
+    if (btnAdd) {
+      btnAdd.addEventListener('click', addProduct);
     }
   </script>
 </body>

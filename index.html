@@ -4,8 +4,538 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản lý Sản phẩm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f3ee;
+      --surface: #ffffff;
+      --surface2: #faf9f6;
+      --border: #e2ddd5;
+      --accent: #c0392b;
+      --accent2: #e74c3c;
+      --text: #1a1a1a;
+      --text-muted: #7a7570;
+      --row-even: #fdf9f4;
+      --row-hover: #fff3f0;
+      --shadow: 0 2px 16px rgba(0,0,0,0.07);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* Header */
+    header {
+      background: var(--text);
+      color: #fff;
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 4px solid var(--accent);
+    }
+    header .logo-dot {
+      width: 14px; height: 14px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      letter-spacing: 0.01em;
+      font-weight: 700;
+    }
+    header .subtitle {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: #aaa;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* Main layout */
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* Form card */
+    .form-card {
+      background: var(--surface);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .form-card-header {
+      background: var(--text);
+      color: #fff;
+      padding: 16px 28px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-card-header::before {
+      content: '';
+      display: block;
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    .form-body {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .field input {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.92rem;
+      color: var(--text);
+      background: var(--surface2);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+      background: #fff;
+    }
+    .field input::placeholder { color: #c0b8b0; }
+
+    #btn-add {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 28px;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(192,57,43,0.18);
+    }
+    #btn-add:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(192,57,43,0.28);
+    }
+    #btn-add:active { transform: translateY(0); }
+
+    /* Error messages */
+    .error-msg {
+      font-size: 0.72rem;
+      color: var(--accent);
+      min-height: 1em;
+    }
+
+    /* Table card */
+    .table-card {
+      background: var(--surface);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .table-card-header {
+      background: var(--text);
+      color: #fff;
+      padding: 16px 28px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .table-card-header .left {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .table-card-header .left::before {
+      content: '';
+      display: block;
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    #product-count {
+      font-size: 0.72rem;
+      color: #999;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+    }
+
+    .table-wrapper { overflow-x: auto; }
+
+    #product-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    #product-table thead tr {
+      background: var(--surface2);
+      border-bottom: 2px solid var(--border);
+    }
+    #product-table th {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    #product-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.18s;
+    }
+    #product-table th.sortable:hover { color: var(--accent); }
+    #product-table th.sortable .sort-icon {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 0.75em;
+      opacity: 0.4;
+      transition: opacity 0.2s, color 0.2s;
+    }
+    #product-table th.sortable.active { color: var(--accent); }
+    #product-table th.sortable.active .sort-icon { opacity: 1; color: var(--accent); }
+
+    #product-table td {
+      padding: 13px 20px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      transition: background 0.15s;
+    }
+    #product-table tbody tr:nth-child(even) td { background: var(--row-even); }
+    #product-table tbody tr:hover td { background: var(--row-hover); }
+    #product-table tbody tr:last-child td { border-bottom: none; }
+
+    .cell-stt {
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      width: 60px;
+    }
+    .cell-name { font-weight: 500; }
+    .cell-category {
+      font-size: 0.82rem;
+    }
+    .category-badge {
+      display: inline-block;
+      background: #f0ebe2;
+      color: #7a6f60;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .cell-price {
+      font-weight: 600;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .cell-qty {
+      font-weight: 500;
+    }
+    .qty-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      padding: 4px 10px;
+      background: var(--text);
+      color: #fff;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* Loading state */
+    .loading-row td {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* Toast notification */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      background: var(--text);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      border-left: 4px solid var(--accent);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header { padding: 20px 20px; }
+      main { padding: 0 12px; margin: 20px auto; }
+      .form-body {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto;
+      }
+      .form-body > *:last-child { grid-column: 1 / -1; }
+      #product-table th, #product-table td { padding: 10px 12px; }
+    }
+  </style>
 </head>
 <body>
 
+  <header>
+    <div class="logo-dot"></div>
+    <h1>Quản lý Sản phẩm</h1>
+    <span class="subtitle">Product Manager v1.0</span>
+  </header>
+
+  <main>
+    <!-- Form thêm sản phẩm -->
+    <div class="form-card">
+      <div class="form-card-header">Thêm sản phẩm mới</div>
+      <div class="form-body">
+        <div class="field">
+          <label for="input-name">Tên sản phẩm</label>
+          <input type="text" id="input-name" placeholder="VD: Máy giặt LG..." />
+          <span class="error-msg" id="err-name"></span>
+        </div>
+        <div class="field">
+          <label for="input-category">Danh mục</label>
+          <input type="text" id="input-category" placeholder="VD: Điện gia dụng..." />
+        </div>
+        <div class="field">
+          <label for="input-price">Đơn giá (VNĐ)</label>
+          <input type="number" id="input-price" placeholder="VD: 9000000" min="1" />
+          <span class="error-msg" id="err-price"></span>
+        </div>
+        <div class="field">
+          <label for="input-quantity">Số lượng</label>
+          <input type="number" id="input-quantity" placeholder="VD: 10" min="1" step="1" />
+          <span class="error-msg" id="err-qty"></span>
+        </div>
+        <button id="btn-add">＋ Thêm</button>
+      </div>
+    </div>
+
+    <!-- Bảng sản phẩm -->
+    <div class="table-card">
+      <div class="table-card-header">
+        <span class="left">Danh sách sản phẩm</span>
+        <span id="product-count"></span>
+      </div>
+      <div class="table-wrapper">
+        <table id="product-table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th class="sortable" id="th-name">
+                Tên sản phẩm <span class="sort-icon" id="sort-icon">⇅</span>
+              </th>
+              <th>Danh mục</th>
+              <th>Đơn giá</th>
+              <th>Số lượng</th>
+            </tr>
+          </thead>
+          <tbody id="product-tbody">
+            <tr class="loading-row">
+              <td colspan="5">Đang tải dữ liệu...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    let products = [];
+    let sortAsc = true;
+    let isSorted = false;
+
+    function formatPrice(price) {
+      return price.toLocaleString('vi-VN') + ' ₫';
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('product-tbody');
+      const countEl = document.getElementById('product-count');
+
+      tbody.innerHTML = '';
+      countEl.textContent = data.length + ' sản phẩm';
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr class="loading-row"><td colspan="5">Chưa có sản phẩm nào.</td></tr>';
+        return;
+      }
+
+      data.forEach((p, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="cell-stt">${index + 1}</td>
+          <td class="cell-name">${escapeHtml(p.name)}</td>
+          <td class="cell-category"><span class="category-badge">${escapeHtml(p.category || '—')}</span></td>
+          <td class="cell-price">${formatPrice(p.price)}</td>
+          <td class="cell-qty"><span class="qty-badge">${p.quantity}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        products = JSON.parse(xhr.responseText);
+        renderTable(products);
+      }
+    };
+    xhr.open('GET', 'products.json');
+    xhr.send();
+
+    const thName = document.getElementById('th-name');
+    const sortIcon = document.getElementById('sort-icon');
+
+    thName.addEventListener('click', function () {
+      if (isSorted) {
+        sortAsc = !sortAsc;
+      } else {
+        sortAsc = true;
+        isSorted = true;
+      }
+
+      const sorted = [...products].sort((a, b) => {
+        return sortAsc
+          ? a.name.localeCompare(b.name, 'vi')
+          : b.name.localeCompare(a.name, 'vi');
+      });
+
+      thName.classList.add('active');
+      sortIcon.textContent = sortAsc ? '▲' : '▼';
+      renderTable(sorted);
+    });
+
+    document.getElementById('btn-add').addEventListener('click', function () {
+      const nameInput     = document.getElementById('input-name');
+      const categoryInput = document.getElementById('input-category');
+      const priceInput    = document.getElementById('input-price');
+      const qtyInput      = document.getElementById('input-quantity');
+
+      const name     = nameInput.value.trim();
+      const category = categoryInput.value.trim() || 'Khác';
+      const price    = parseFloat(priceInput.value);
+      const quantity = parseInt(qtyInput.value, 10);
+
+      document.getElementById('err-name').textContent  = '';
+      document.getElementById('err-price').textContent = '';
+      document.getElementById('err-qty').textContent   = '';
+
+      let valid = true;
+      if (!name || name.length < 3) {
+        document.getElementById('err-name').textContent = 'Tên phải có ít nhất 3 ký tự.';
+        valid = false;
+      }
+      if (isNaN(price) || price <= 0) {
+        document.getElementById('err-price').textContent = 'Đơn giá phải là số dương.';
+        valid = false;
+      }
+      if (isNaN(quantity) || quantity < 1 || !Number.isInteger(quantity)) {
+        document.getElementById('err-qty').textContent = 'Số lượng phải là số nguyên ≥ 1.';
+        valid = false;
+      }
+      if (!valid) return;
+
+      const newProduct = {
+        id: products.length ? Math.max(...products.map(p => p.id)) + 1 : 1,
+        name,
+        category,
+        price,
+        quantity
+      };
+      products.push(newProduct);
+
+      isSorted = false;
+      thName.classList.remove('active');
+      sortIcon.textContent = '⇅';
+
+      renderTable(products);
+
+      nameInput.value     = '';
+      categoryInput.value = '';
+      priceInput.value    = '';
+      qtyInput.value      = '';
+
+      showToast('Đã thêm "' + name + '" thành công!');
+      nameInput.focus();
+    });
+
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+  </script>
 </body>
 </html>

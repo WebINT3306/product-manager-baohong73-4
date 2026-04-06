@@ -441,6 +441,8 @@
         `;
         tbody.appendChild(tr);
       });
+      
+      window.products = products;
     }
 
     function escapeHtml(str) {
@@ -452,21 +454,36 @@
     }
 
     function loadProducts() {
-      const xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
-            try {
-              products = JSON.parse(xhr.responseText);
-              renderTable(products);
-            } catch (e) {
-              console.error('Error parsing JSON:', e);
+      const tryLoad = (path, retries = 0) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                products = JSON.parse(xhr.responseText);
+                window.products = products;
+                window.appDataLoaded = true;
+                renderTable(products);
+              } catch (e) {
+                console.error('Error parsing JSON:', e);
+              }
+            } else if (retries < 2) {
+              const nextPath = retries === 0 ? '../products.json' : './products.json';
+              tryLoad(nextPath, retries + 1);
             }
           }
-        }
+        };
+        xhr.onerror = function () {
+          if (retries < 2) {
+            const nextPath = retries === 0 ? '../products.json' : './products.json';
+            tryLoad(nextPath, retries + 1);
+          }
+        };
+        xhr.open('GET', path, true);
+        xhr.send();
       };
-      xhr.open('GET', 'products.json', true);
-      xhr.send();
+      
+      tryLoad('products.json');
     }
 
     function addProduct() {
@@ -507,6 +524,7 @@
         quantity
       };
       products.push(newProduct);
+      window.products = products;
 
       isSorted = false;
       const thName = document.getElementById('th-name');
@@ -540,10 +558,10 @@
       }
     }
 
-    loadProducts();
-
-    const thName = document.getElementById('th-name');
-    if (thName) {
+    function setupSort() {
+      const thName = document.getElementById('th-name');
+      if (!thName) return;
+      
       thName.addEventListener('click', function () {
         if (isSorted) {
           sortAsc = !sortAsc;
@@ -567,10 +585,23 @@
       });
     }
 
-    const btnAdd = document.getElementById('btn-add');
-    if (btnAdd) {
-      btnAdd.addEventListener('click', addProduct);
+    function setupAddButton() {
+      const btnAdd = document.getElementById('btn-add');
+      if (btnAdd) {
+        btnAdd.addEventListener('click', addProduct);
+      }
     }
+
+    loadProducts();
+    setupSort();
+    setupAddButton();
+    
+    window.appState = {
+      products,
+      renderTable,
+      addProduct,
+      getProducts: () => products
+    };
   </script>
 </body>
 </html>
